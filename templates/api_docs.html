@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}API Documentation - GrowMate{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="text-center mb-5">
+            <h1 class="display-4 text-success">
+                <i class="fas fa-book me-3"></i>API Documentation
+            </h1>
+            <p class="lead">Complete guide to using the GrowMate API endpoints</p>
+        </div>
+
+        <!-- API Overview -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>API Overview
+                </h3>
+            </div>
+            <div class="card-body">
+                <p>The GrowMate API provides endpoints for crop yield prediction using machine learning models. All endpoints return JSON responses.</p>
+                <p><strong>Base URL:</strong> <code>http://localhost:5000</code></p>
+                <p><strong>Content-Type:</strong> <code>application/json</code></p>
+            </div>
+        </div>
+
+        <!-- Single Prediction Endpoint -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-calculator me-2"></i>Single Prediction
+                </h3>
+            </div>
+            <div class="card-body">
+                <h5>POST /predict</h5>
+                <p>Make a single crop yield prediction.</p>
+                
+                <h6>Request Body:</h6>
+                <pre><code>{
+  "crop_type": "Tomato",
+  "soil_type": "Loamy",
+  "soil_ph": 6.5,
+  "temperature": 25.0,
+  "humidity": 70.0,
+  "wind_speed": 10.0,
+  "n": 80.0,
+  "p": 60.0,
+  "k": 50.0,
+  "soil_quality": 75.0,
+  "avg_rainfall": 800.0
+}</code></pre>
+
+                <h6>Response (Success):</h6>
+                <pre><code>{
+  "prediction": 45.67,
+  "status": "success"
+}</code></pre>
+
+                <h6>Response (Error):</h6>
+                <pre><code>{
+  "error": "Missing required field: crop_type",
+  "status": "error"
+}</code></pre>
+
+                <h6>cURL Example:</h6>
+                <pre><code>curl -X POST http://localhost:5000/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "crop_type": "Tomato",
+    "soil_type": "Loamy",
+    "soil_ph": 6.5,
+    "temperature": 25.0,
+    "humidity": 70.0,
+    "wind_speed": 10.0,
+    "n": 80.0,
+    "p": 60.0,
+    "k": 50.0,
+    "soil_quality": 75.0,
+    "avg_rainfall": 800.0
+  }'</code></pre>
+            </div>
+        </div>
+
+        <!-- Batch Prediction Endpoint -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-layer-group me-2"></i>Batch Prediction
+                </h3>
+            </div>
+            <div class="card-body">
+                <h5>POST /batch_predict</h5>
+                <p>Make multiple crop yield predictions at once.</p>
+                
+                <h6>Request Body:</h6>
+                <pre><code>{
+  "data": [
+    {
+      "crop_type": "Tomato",
+      "soil_type": "Loamy",
+      "soil_ph": 6.5,
+      "temperature": 25.0,
+      "humidity": 70.0,
+      "wind_speed": 10.0,
+      "n": 80.0,
+      "p": 60.0,
+      "k": 50.0,
+      "soil_quality": 75.0,
+      "avg_rainfall": 800.0
+    },
+    {
+      "crop_type": "Rice",
+      "soil_type": "Clay",
+      "soil_ph": 6.0,
+      "temperature": 28.0,
+      "humidity": 85.0,
+      "wind_speed": 5.0,
+      "n": 90.0,
+      "p": 70.0,
+      "k": 60.0,
+      "soil_quality": 80.0,
+      "avg_rainfall": 1200.0
+    }
+  ]
+}</code></pre>
+
+                <h6>Response:</h6>
+                <pre><code>{
+  "predictions": [
+    {
+      "index": 0,
+      "prediction": 45.67,
+      "input": { ... }
+    },
+    {
+      "index": 1,
+      "prediction": 52.34,
+      "input": { ... }
+    }
+  ],
+  "errors": [],
+  "total_processed": 2,
+  "successful": 2,
+  "failed": 0
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- CSV Prediction Endpoint -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-file-csv me-2"></i>CSV Prediction
+                </h3>
+            </div>
+            <div class="card-body">
+                <h5>POST /csv_predict</h5>
+                <p>Upload a CSV file and get predictions for all rows.</p>
+                
+                <h6>Request:</h6>
+                <p>Multipart form data with file field named 'file'</p>
+                
+                <h6>CSV Format:</h6>
+                <p>CSV should contain columns matching the prediction input fields. Date and target columns will be automatically removed.</p>
+                
+                <h6>Response:</h6>
+                <pre><code>{
+  "predictions": [
+    {
+      "index": 0,
+      "prediction": 45.67,
+      "input": { ... }
+    }
+  ],
+  "total_processed": 100,
+  "successful": 100
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- Model Info Endpoint -->
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-cogs me-2"></i>Model Information
+                </h3>
+            </div>
+            <div class="card-body">
+                <h5>GET /model_info</h5>
+                <p>Get information about the loaded model.</p>
+                
+                <h6>Response:</h6>
+                <pre><code>{
+  "model_loaded": true,
+  "feature_info": {
+    "numeric_features": ["soil_ph", "temperature", ...],
+    "categorical_features": ["crop_type", "soil_type"],
+    "all_features": [...]
+  },
+  "model_type": "RandomForestRegressor"
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- Error Codes -->
+        <div class="card mb-4">
+            <div class="card-header bg-danger text-white">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Error Codes
+                </h3>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Status Code</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge bg-success">200</span></td>
+                            <td>Success</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-warning">400</span></td>
+                            <td>Bad Request - Missing or invalid parameters</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-danger">500</span></td>
+                            <td>Internal Server Error - Model or processing error</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Field Descriptions -->
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>Field Descriptions
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Required Fields:</h6>
+                        <ul>
+                            <li><strong>crop_type:</strong> Type of crop (Barley, Corn, Cotton, etc.)</li>
+                            <li><strong>soil_type:</strong> Type of soil (Clay, Loamy, Peaty, Sandy, Saline)</li>
+                            <li><strong>soil_ph:</strong> Soil pH level (4.0-9.0)</li>
+                            <li><strong>temperature:</strong> Temperature in Celsius (0-50)</li>
+                            <li><strong>humidity:</strong> Humidity percentage (0-100)</li>
+                            <li><strong>wind_speed:</strong> Wind speed in km/h (0-50)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Nutrient & Other Fields:</h6>
+                        <ul>
+                            <li><strong>n:</strong> Nitrogen content (0-200)</li>
+                            <li><strong>p:</strong> Phosphorus content (0-200)</li>
+                            <li><strong>k:</strong> Potassium content (0-200)</li>
+                            <li><strong>soil_quality:</strong> Soil quality score (0-100)</li>
+                            <li><strong>avg_rainfall:</strong> Average seasonal rainfall in mm (0-10000)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

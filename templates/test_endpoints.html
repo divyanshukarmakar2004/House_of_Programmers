@@ -1,0 +1,489 @@
+{% extends "base.html" %}
+
+{% block title %}Test API Endpoints - GrowMate{% endblock %}
+
+{% block extra_head %}
+<style>
+    .test-section {
+        margin-bottom: 2rem;
+    }
+    .response-area {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        min-height: 100px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+    }
+    .btn-test {
+        margin: 0.25rem;
+    }
+    .status-indicator {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+    .status-success { background-color: #28a745; }
+    .status-error { background-color: #dc3545; }
+    .status-pending { background-color: #ffc107; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="text-center mb-5">
+            <h1 class="display-4 text-success">
+                <i class="fas fa-flask me-3"></i>API Testing Interface
+            </h1>
+            <p class="lead">Test all GrowMate API endpoints interactively</p>
+        </div>
+
+        <!-- Model Status -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Model Status
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <button class="btn btn-primary" onclick="checkModelStatus()">
+                            <i class="fas fa-sync me-1"></i>Check Model Status
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <div id="modelStatus">
+                            <span class="status-indicator status-pending"></span>
+                            <span>Click to check model status</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="modelInfo" class="mt-3" style="display: none;">
+                    <h6>Model Information:</h6>
+                    <div id="modelDetails" class="response-area"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Single Prediction Test -->
+        <div class="card mb-4 test-section">
+            <div class="card-header bg-success text-white">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-calculator me-2"></i>Single Prediction Test
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Test Data:</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Crop Type:</label>
+                            <select class="form-select" id="testCropType">
+                                <option value="Tomato">Tomato</option>
+                                <option value="Rice">Rice</option>
+                                <option value="Wheat">Wheat</option>
+                                <option value="Corn">Corn</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Soil Type:</label>
+                            <select class="form-select" id="testSoilType">
+                                <option value="Loamy">Loamy</option>
+                                <option value="Clay">Clay</option>
+                                <option value="Sandy">Sandy</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Temperature (°C):</label>
+                            <input type="number" class="form-control" id="testTemperature" value="25" step="0.1">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Soil pH:</label>
+                            <input type="number" class="form-control" id="testSoilPh" value="6.5" step="0.1" min="4" max="9">
+                        </div>
+                        <button class="btn btn-success btn-test" onclick="testSinglePrediction()">
+                            <i class="fas fa-play me-1"></i>Test Single Prediction
+                        </button>
+                        <button class="btn btn-outline-success btn-test" onclick="loadSampleData()">
+                            <i class="fas fa-download me-1"></i>Load Sample Data
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Response:</h6>
+                        <div id="singlePredictionResponse" class="response-area">
+                            Click "Test Single Prediction" to see results
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batch Prediction Test -->
+        <div class="card mb-4 test-section">
+            <div class="card-header bg-warning text-dark">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-layer-group me-2"></i>Batch Prediction Test
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Test Data (JSON):</h6>
+                        <textarea class="form-control" id="batchTestData" rows="15" style="font-family: 'Courier New', monospace; font-size: 0.9rem;">{
+  "data": [
+    {
+      "crop_type": "Tomato",
+      "soil_type": "Loamy",
+      "soil_ph": 6.5,
+      "temperature": 25.0,
+      "humidity": 70.0,
+      "wind_speed": 10.0,
+      "n": 80.0,
+      "p": 60.0,
+      "k": 50.0,
+      "soil_quality": 75.0,
+      "avg_rainfall": 800.0
+    },
+    {
+      "crop_type": "Rice",
+      "soil_type": "Clay",
+      "soil_ph": 6.0,
+      "temperature": 28.0,
+      "humidity": 85.0,
+      "wind_speed": 5.0,
+      "n": 90.0,
+      "p": 70.0,
+      "k": 60.0,
+      "soil_quality": 80.0,
+      "avg_rainfall": 1200.0
+    }
+  ]
+}</textarea>
+                        <button class="btn btn-warning btn-test" onclick="testBatchPrediction()">
+                            <i class="fas fa-play me-1"></i>Test Batch Prediction
+                        </button>
+                        <button class="btn btn-outline-warning btn-test" onclick="loadSampleBatchData()">
+                            <i class="fas fa-download me-1"></i>Load Sample Data
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Response:</h6>
+                        <div id="batchPredictionResponse" class="response-area">
+                            Click "Test Batch Prediction" to see results
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CSV Upload Test -->
+        <div class="card mb-4 test-section">
+            <div class="card-header bg-info text-white">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-file-csv me-2"></i>CSV Upload Test
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Upload CSV File:</h6>
+                        <div class="mb-3">
+                            <input type="file" class="form-control" id="csvFile" accept=".csv">
+                        </div>
+                        <button class="btn btn-info btn-test" onclick="testCsvPrediction()">
+                            <i class="fas fa-upload me-1"></i>Test CSV Prediction
+                        </button>
+                        <button class="btn btn-outline-info btn-test" onclick="downloadSampleCsv()">
+                            <i class="fas fa-download me-1"></i>Download Sample CSV
+                        </button>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                CSV should contain columns: crop_type, soil_type, soil_ph, temperature, 
+                                humidity, wind_speed, n, p, k, soil_quality, avg_rainfall
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Response:</h6>
+                        <div id="csvPredictionResponse" class="response-area">
+                            Select a CSV file and click "Test CSV Prediction"
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Tests -->
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Tests
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-primary w-100 mb-2" onclick="quickTest('tomato')">
+                            <i class="fas fa-seedling me-1"></i>Test Tomato
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-success w-100 mb-2" onclick="quickTest('rice')">
+                            <i class="fas fa-seedling me-1"></i>Test Rice
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-warning w-100 mb-2" onclick="quickTest('wheat')">
+                            <i class="fas fa-seedling me-1"></i>Test Wheat
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-info w-100 mb-2" onclick="quickTest('corn')">
+                            <i class="fas fa-seedling me-1"></i>Test Corn
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Sample data for different crops
+    const sampleData = {
+        tomato: {
+            crop_type: "Tomato",
+            soil_type: "Loamy",
+            soil_ph: 6.5,
+            temperature: 25.0,
+            humidity: 70.0,
+            wind_speed: 10.0,
+            n: 80.0,
+            p: 60.0,
+            k: 50.0,
+            soil_quality: 75.0,
+            avg_rainfall: 800.0
+        },
+        rice: {
+            crop_type: "Rice",
+            soil_type: "Clay",
+            soil_ph: 6.0,
+            temperature: 28.0,
+            humidity: 85.0,
+            wind_speed: 5.0,
+            n: 90.0,
+            p: 70.0,
+            k: 60.0,
+            soil_quality: 80.0,
+            avg_rainfall: 1200.0
+        },
+        wheat: {
+            crop_type: "Wheat",
+            soil_type: "Sandy",
+            soil_ph: 7.0,
+            temperature: 20.0,
+            humidity: 60.0,
+            wind_speed: 15.0,
+            n: 70.0,
+            p: 50.0,
+            k: 40.0,
+            soil_quality: 65.0,
+            avg_rainfall: 600.0
+        },
+        corn: {
+            crop_type: "Corn",
+            soil_type: "Loamy",
+            soil_ph: 6.8,
+            temperature: 26.0,
+            humidity: 75.0,
+            wind_speed: 8.0,
+            n: 85.0,
+            p: 65.0,
+            k: 55.0,
+            soil_quality: 78.0,
+            avg_rainfall: 900.0
+        }
+    };
+
+    // Check model status
+    async function checkModelStatus() {
+        const statusElement = document.getElementById('modelStatus');
+        const infoElement = document.getElementById('modelInfo');
+        const detailsElement = document.getElementById('modelDetails');
+        
+        statusElement.innerHTML = '<span class="status-indicator status-pending"></span>Checking model status...';
+        
+        try {
+            const response = await fetch('/model_info');
+            const data = await response.json();
+            
+            if (data.model_loaded) {
+                statusElement.innerHTML = '<span class="status-indicator status-success"></span>Model loaded successfully';
+                infoElement.style.display = 'block';
+                detailsElement.textContent = JSON.stringify(data, null, 2);
+            } else {
+                statusElement.innerHTML = '<span class="status-indicator status-error"></span>Model not loaded';
+            }
+        } catch (error) {
+            statusElement.innerHTML = '<span class="status-indicator status-error"></span>Error checking model status';
+            console.error('Error:', error);
+        }
+    }
+
+    // Test single prediction
+    async function testSinglePrediction() {
+        const responseElement = document.getElementById('singlePredictionResponse');
+        responseElement.textContent = 'Making prediction...';
+        
+        const testData = {
+            crop_type: document.getElementById('testCropType').value,
+            soil_type: document.getElementById('testSoilType').value,
+            soil_ph: parseFloat(document.getElementById('testSoilPh').value),
+            temperature: parseFloat(document.getElementById('testTemperature').value),
+            humidity: 70.0,
+            wind_speed: 10.0,
+            n: 80.0,
+            p: 60.0,
+            k: 50.0,
+            soil_quality: 75.0,
+            avg_rainfall: 800.0
+        };
+        
+        try {
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(testData)
+            });
+            
+            const data = await response.json();
+            responseElement.textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+            responseElement.textContent = 'Error: ' + error.message;
+        }
+    }
+
+    // Test batch prediction
+    async function testBatchPrediction() {
+        const responseElement = document.getElementById('batchPredictionResponse');
+        responseElement.textContent = 'Making batch predictions...';
+        
+        try {
+            const testData = JSON.parse(document.getElementById('batchTestData').value);
+            
+            const response = await fetch('/batch_predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(testData)
+            });
+            
+            const data = await response.json();
+            responseElement.textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+            responseElement.textContent = 'Error: ' + error.message;
+        }
+    }
+
+    // Test CSV prediction
+    async function testCsvPrediction() {
+        const responseElement = document.getElementById('csvPredictionResponse');
+        const fileInput = document.getElementById('csvFile');
+        
+        if (!fileInput.files[0]) {
+            responseElement.textContent = 'Please select a CSV file first';
+            return;
+        }
+        
+        responseElement.textContent = 'Processing CSV file...';
+        
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        
+        try {
+            const response = await fetch('/csv_predict', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            responseElement.textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+            responseElement.textContent = 'Error: ' + error.message;
+        }
+    }
+
+    // Load sample data
+    function loadSampleData() {
+        const data = sampleData.tomato;
+        document.getElementById('testCropType').value = data.crop_type;
+        document.getElementById('testSoilType').value = data.soil_type;
+        document.getElementById('testSoilPh').value = data.soil_ph;
+        document.getElementById('testTemperature').value = data.temperature;
+    }
+
+    // Load sample batch data
+    function loadSampleBatchData() {
+        const sampleBatch = {
+            "data": [
+                sampleData.tomato,
+                sampleData.rice,
+                sampleData.wheat
+            ]
+        };
+        document.getElementById('batchTestData').value = JSON.stringify(sampleBatch, null, 2);
+    }
+
+    // Quick test function
+    async function quickTest(crop) {
+        const responseElement = document.getElementById('singlePredictionResponse');
+        responseElement.textContent = `Testing ${crop} prediction...`;
+        
+        try {
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(sampleData[crop])
+            });
+            
+            const data = await response.json();
+            responseElement.textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+            responseElement.textContent = 'Error: ' + error.message;
+        }
+    }
+
+    // Download sample CSV
+    function downloadSampleCsv() {
+        const csvContent = "crop_type,soil_type,soil_ph,temperature,humidity,wind_speed,n,p,k,soil_quality,avg_rainfall\n" +
+                          "Tomato,Loamy,6.5,25.0,70.0,10.0,80.0,60.0,50.0,75.0,800.0\n" +
+                          "Rice,Clay,6.0,28.0,85.0,5.0,90.0,70.0,60.0,80.0,1200.0\n" +
+                          "Wheat,Sandy,7.0,20.0,60.0,15.0,70.0,50.0,40.0,65.0,600.0";
+        
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'sample_crop_data.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+        checkModelStatus();
+    });
+</script>
+{% endblock %}
